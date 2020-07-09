@@ -1,6 +1,8 @@
 from collections import OrderedDict
 import torch
 import torch.nn as nn
+import numpy as np
+import os.path
 from torch.optim import lr_scheduler
 from torch.optim import Adam
 from torch.nn.parallel import DataParallel  # , DistributedDataParallel
@@ -11,6 +13,7 @@ from models.loss_ssim import SSIMLoss
 
 from utils.utils_model import test_mode
 from utils.utils_regularizers import regularizer_orth, regularizer_clip
+from matplotlib import pyplot as plt
 
 
 class ModelPlain(ModelBase):
@@ -22,6 +25,7 @@ class ModelPlain(ModelBase):
         # ------------------------------------
         self.netG = define_G(opt).to(self.device)
         self.netG = DataParallel(self.netG)
+        self.G_loss_arr = []
 
     """
     # ----------------------------------------
@@ -50,12 +54,26 @@ class ModelPlain(ModelBase):
         if load_path_G is not None:
             print('Loading model for G [{:s}] ...'.format(load_path_G))
             self.load_network(load_path_G, self.netG)
+        if os.path.isfile(self.save_dir+'/loss.csv'):
+            # Load loss arrray
+            self.G_loss_arr = np.ndarray.tolist(np.loadtxt(self.save_dir+'/loss.csv', delimiter=','))
+            print('Loaded array', self.G_loss_arr)
 
     # ----------------------------------------
     # save model
     # ----------------------------------------
     def save(self, iter_label):
         self.save_network(self.save_dir, self.netG, 'G', iter_label)
+        # Save all losses to csv
+        np.savetxt(self.save_dir+'/loss.csv', np.asarray(self.G_loss_arr), delimiter=',')
+        # Print loss picture
+        # Plot loss graph
+        plt.title("loss per step")
+        plt.xlabel("current step up to " + str(iter_label))
+        plt.ylabel("loss")
+        plt.plot(range(1, iter_label+1), self.G_loss_arr)
+        learning_rate = self.opt_train['G_optimizer_lr']
+        plt.savefig(self.save_dir + '/l' + str(learning_rate) + '_loss.png')
 
     # ----------------------------------------
     # define loss
@@ -140,6 +158,7 @@ class ModelPlain(ModelBase):
 
         # self.log_dict['G_loss'] = G_loss.item()/self.E.size()[0]  # if `reduction='sum'`
         self.log_dict['G_loss'] = G_loss.item()
+        self.G_loss_arr.append(G_loss.item())
  
     # ----------------------------------------
     # test / inference

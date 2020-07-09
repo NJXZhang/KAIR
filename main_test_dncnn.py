@@ -1,3 +1,4 @@
+import argparse
 import os.path
 import logging
 
@@ -11,7 +12,7 @@ import torch
 from utils import utils_logger
 from utils import utils_model
 from utils import utils_image as util
-
+from utils import utils_option as option
 
 '''
 Spyder (Python 3.6)
@@ -72,7 +73,13 @@ def main():
     need_degradation = True          # default: True
     x8 = False                       # default: False, x8 to boost performance
     show_img = False                 # default: False
+    # Arguments
+    json_path = 'options/train_dncnn.json'
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-opt', type=str, default=json_path, help='Path to option JSON file.')
 
+    opt = option.parse(parser.parse_args().opt, is_train=True)
+    init_iter, init_path_G = option.find_last_checkpoint(opt['path']['models'], net_type='G')
 
 
 
@@ -89,7 +96,7 @@ def main():
     model_pool = 'model_zoo'  # fixed
     testsets = 'testsets'     # fixed
     results = 'results'       # fixed
-    result_name = testset_name + '_' + model_name     # fixed
+    result_name = testset_name + '_' + model_name + '_ep' + str(init_iter)    # fixed
     border = sf if task_current == 'sr' else 0        # shave boader to calculate PSNR and SSIM
     model_path = os.path.join(model_pool, model_name+'.pth')
 

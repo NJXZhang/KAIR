@@ -103,7 +103,7 @@ def main(json_path='options/train_dncnn.json'):
     # Step--2 (creat dataloader)
     # ----------------------------------------
     '''
-
+    batch_size = 0
     # ----------------------------------------
     # 1) create_dataset
     # 2) creat_dataloader for train and test
@@ -114,8 +114,9 @@ def main(json_path='options/train_dncnn.json'):
             train_set = define_Dataset(dataset_opt)
             train_size = int(math.ceil(len(train_set) / dataset_opt['dataloader_batch_size']))
             logger.info('Number of train images: {:,d}, iters: {:,d}'.format(len(train_set), train_size))
+            batch_size = dataset_opt['dataloader_batch_size']
             train_loader = DataLoader(train_set,
-                                      batch_size=dataset_opt['dataloader_batch_size'],
+                                      batch_size=batch_size,
                                       shuffle=dataset_opt['dataloader_shuffle'],
                                       num_workers=dataset_opt['dataloader_num_workers'],
                                       drop_last=True,
@@ -151,6 +152,7 @@ def main(json_path='options/train_dncnn.json'):
     '''
 
     for epoch in range(1000000):  # keep running
+        print('epoch: ' + str(epoch))
         for i, train_data in enumerate(train_loader):
 
             current_step += 1
