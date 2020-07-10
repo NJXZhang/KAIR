@@ -15,6 +15,7 @@ from utils.utils_model import test_mode
 from utils.utils_regularizers import regularizer_orth, regularizer_clip
 from matplotlib import pyplot as plt
 
+LEARNING_STEP = 10
 
 class ModelPlain(ModelBase):
     """Train with pixel loss"""
@@ -71,7 +72,11 @@ class ModelPlain(ModelBase):
         plt.title("loss per step")
         plt.xlabel("current step up to " + str(iter_label))
         plt.ylabel("loss")
-        plt.plot(range(1, iter_label+1), self.G_loss_arr)
+        if isinstance(iter_label, int):
+            stop = iter_label+1
+        else:
+            stop = self.G_loss_arr*LEARNING_STEP
+        plt.plot(range(1, stop, LEARNING_STEP), self.G_loss_arr)
         learning_rate = self.opt_train['G_optimizer_lr']
         plt.savefig(self.save_dir + '/l' + str(learning_rate) + '_loss.png')
 
@@ -158,7 +163,8 @@ class ModelPlain(ModelBase):
 
         # self.log_dict['G_loss'] = G_loss.item()/self.E.size()[0]  # if `reduction='sum'`
         self.log_dict['G_loss'] = G_loss.item()
-        self.G_loss_arr.append(G_loss.item())
+        if current_step % LEARNING_STEP == 1:
+            self.G_loss_arr.append(G_loss.item())
  
     # ----------------------------------------
     # test / inference
