@@ -123,7 +123,7 @@ def main():
     # ----------------------------------------
 
     from models.network_dncnn import DnCNN as net
-    model = net(in_nc=n_channels, out_nc=n_channels, nc=64, nb=nb, act_mode='R')
+    model = net(in_nc=n_channels, out_nc=n_channels, nc=64, nb=nb, act_mode=opt['netG']['act_mode']).to('cpu')
     model.load_state_dict(torch.load(model_path), strict=True)
     model.eval()
     for k, v in model.named_parameters():
